@@ -1,0 +1,19 @@
+{
+  "name": "landroll-leader-api",
+  "version": "1.0.0",
+  "description": "Landroll Leader - county land roll ingestion API and listings backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.22.0",
+    "qrcode": "^1.5.4",
+    "xlsx": "^0.18.5"
+  }
+}

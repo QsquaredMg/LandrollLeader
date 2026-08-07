@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Landroll Leader — Tax sale properties, before the sale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pine:#17453B; --pine-deep:#0E2F28; --pine-soft:#E4EDE7;
+  --paper:#F7F6F1; --card:#FFFFFF; --ink:#181F1B; --ink-soft:#54615A; --ink-faint:#8A958E;
+  --amber:#C8730F; --amber-soft:#FBEEDB; --amber-deep:#7A4508;
+  --red:#B3402A; --red-soft:#F9E7E2;
+  --line:#E2E1D8; --line-strong:#C9C8BD;
+  --disp:'Zilla Slab', Georgia, serif;
+  --body:'Public Sans', -apple-system, system-ui, sans-serif;
+  --mono:'IBM Plex Mono', ui-monospace, monospace;
+  --r:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);background:var(--paper);color:var(--ink);font-size:15px;line-height:1.55}
+button{font-family:var(--body);cursor:pointer;border:none;background:none;font-size:14px}
+input,select{font-family:var(--body);font-size:14px;color:var(--ink)}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+/* ============ SHELL / VIEW SWITCHING ============ */
+.view{display:none}
+.view.on{display:block}
+
+/* ============ PUBLIC: HEADER ============ */
+.hd{position:sticky;top:0;z-index:50;background:var(--pine);color:#F2F5F0;border-bottom:3px solid var(--amber)}
+.hd-in{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:0 24px;height:62px}
+.logo{display:flex;align-items:baseline;gap:2px;font-family:var(--disp);font-size:24px;font-weight:700;letter-spacing:.2px;white-space:nowrap}
+.logo .ll-mark{display:inline-flex;width:26px;height:26px;background:var(--amber);border-radius:4px;align-items:center;justify-content:center;font-size:15px;color:#fff;margin-right:8px;transform:translateY(3px)}
+.logo em{font-style:normal;color:#E9C083}
+.hd-search{flex:1;max-width:520px;display:flex;background:#fff;border-radius:var(--r);overflow:hidden}
+.hd-search input{flex:1;border:none;padding:10px 14px;font-size:14px}
+.hd-search button{background:var(--amber);color:#fff;padding:0 16px;font-weight:600}
+.hd-nav{display:flex;gap:4px;margin-left:auto;align-items:center}
+.hd-nav a,.hd-nav button.navlink{padding:8px 12px;border-radius:6px;font-size:13.5px;font-weight:500;color:#DCE5DE}
+.hd-nav a:hover,.hd-nav button.navlink:hover{background:rgba(255,255,255,.1)}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:var(--r);font-weight:600;font-size:14px;transition:filter .12s}
+.btn:hover{filter:brightness(1.06)}
+.btn-amber{background:var(--amber);color:#fff}
+.btn-pine{background:var(--pine);color:#fff}
+.btn-ghost{border:1.5px solid var(--line-strong);color:var(--ink);background:var(--card)}
+.btn-ghost:hover{border-color:var(--pine);filter:none}
+.btn-danger{background:var(--red);color:#fff}
+.btn-sm{padding:6px 12px;font-size:13px}
+
+/* ============ PUBLIC: SALE BANNER + FILTERS ============ */
+.sale-strip{background:var(--pine-deep);color:#CBDCD2;font-size:13px}
+.sale-strip .hd-in{height:36px;gap:14px}
+.sale-strip strong{color:#F0D9B4;font-weight:600}
+.sale-strip .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.35}}
+.filters{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:62px;z-index:40}
+.filters .hd-in{height:56px;gap:10px}
+.fsel{appearance:none;border:1.5px solid var(--line-strong);border-radius:var(--r);padding:8px 30px 8px 12px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2354615A' stroke-width='1.5' fill='none'/%3E%3C/svg%3E") no-repeat right 10px center;font-weight:500;font-size:13.5px}
+.fsel:hover{border-color:var(--pine)}
+.fcount{margin-left:auto;font-size:13px;color:var(--ink-soft)}
+.fcount b{color:var(--ink);font-weight:700}
+
+/* ============ PUBLIC: SPLIT MAP + RESULTS ============ */
+.split{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);max-width:1440px;margin:0 auto;height:calc(100vh - 158px);min-height:540px}
+.mapwrap{position:relative;background:#EAEFE6;border-right:1px solid var(--line);overflow:hidden}
+.plat{position:absolute;inset:0;width:100%;height:100%}
+.map-cred{position:absolute;left:12px;bottom:10px;font-size:11px;color:var(--ink-faint);background:rgba(255,255,255,.85);padding:3px 8px;border-radius:4px}
+.map-legend{position:absolute;top:12px;left:12px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;font-size:12px;display:flex;flex-direction:column;gap:6px}
+.map-legend span{display:flex;align-items:center;gap:7px;color:var(--ink-soft)}
+.lg-pin{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+.pin{position:absolute;transform:translate(-50%,-100%);background:var(--pine);color:#fff;font-family:var(--mono);font-size:12px;font-weight:500;padding:4px 8px;border-radius:14px;border:2px solid #fff;box-shadow:0 2px 6px rgba(14,47,40,.35);cursor:pointer;transition:transform .12s;white-space:nowrap}
+.pin:after{content:'';position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--pine)}
+.pin:hover,.pin.hot{transform:translate(-50%,-100%) scale(1.14);background:var(--amber);z-index:5}
+.pin:hover:after,.pin.hot:after{border-top-color:var(--amber)}
+.pin.struck{background:var(--ink-faint)} .pin.struck:after{border-top-color:var(--ink-faint)}
+.results{overflow-y:auto;padding:18px 20px 40px;background:var(--paper)}
+.res-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+.res-hd h1{font-family:var(--disp);font-size:22px;font-weight:600}
+.res-sub{font-size:13px;color:var(--ink-soft);margin-bottom:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:16px}
+
+/* ============ CARD (ledger entry) ============ */
+.pc{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .15s;position:relative}
+.pc:hover{box-shadow:0 8px 22px rgba(23,69,59,.13);transform:translateY(-2px)}
+.pc-img{height:118px;position:relative;display:flex;align-items:flex-end;background:linear-gradient(160deg,#2A5A4C,#17453B)}
+.pc-img svg{position:absolute;inset:0;width:100%;height:100%}
+.pc-acres{position:relative;margin:0 0 8px 12px;color:#EAF2EC;font-size:12px;font-weight:600;background:rgba(14,47,40,.55);padding:3px 9px;border-radius:12px}
+.stamp{position:absolute;top:10px;right:-8px;transform:rotate(6deg);font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border:1.5px solid;border-radius:3px;background:rgba(255,255,255,.92)}
+.stamp.active{color:var(--pine);border-color:var(--pine)}
+.stamp.paid{color:var(--red);border-color:var(--red)}
+.stamp.struck{color:var(--ink-soft);border-color:var(--ink-soft)}
+.pc-body{padding:12px 14px 13px}
+.pc-bid{font-family:var(--disp);font-size:21px;font-weight:700;color:var(--pine-deep)}
+.pc-bid small{font-family:var(--body);font-size:11.5px;font-weight:500;color:var(--ink-faint);margin-left:5px}
+.pc-meta{display:flex;gap:10px;font-size:12.5px;color:var(--ink-soft);margin:3px 0 8px;flex-wrap:wrap}
+.pc-legal{font-size:12.5px;color:var(--ink-soft);border-top:1px dashed var(--line-strong);padding-top:8px;min-height:36px}
+.pc-parcel{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);margin-top:7px;display:flex;justify-content:space-between;align-items:center}
+.pc-parcel .cls{background:var(--pine-soft);color:var(--pine);font-family:var(--body);font-weight:600;font-size:10.5px;padding:2px 8px;border-radius:10px;letter-spacing:.03em}
+
+/* ============ DETAIL MODAL ============ */
+.ovl{position:fixed;inset:0;background:rgba(14,47,40,.5);z-index:100;display:none;align-items:center;justify-content:center;padding:24px}
+.ovl.on{display:flex}
+.dlg{background:var(--card);border-radius:14px;max-width:760px;width:100%;max-height:88vh;overflow-y:auto;position:relative}
+.dlg-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.9);font-size:17px;z-index:2;border:1px solid var(--line)}
+.dlg-hero{height:170px;background:linear-gradient(150deg,#2A5A4C,#123830);position:relative;display:flex;align-items:flex-end;padding:18px 26px}
+.dlg-hero h2{font-family:var(--disp);color:#fff;font-size:26px;font-weight:600;position:relative}
+.dlg-body{padding:22px 26px 26px}
+.dlg-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:26px}
+.spec{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;font-size:13.5px;margin-top:14px}
+.spec div b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);font-weight:600;margin-bottom:1px}
+.bidbox{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.bidbox .op{font-family:var(--disp);font-size:30px;font-weight:700;color:var(--pine-deep)}
+.bidbox .oplbl{font-size:12px;color:var(--ink-soft);margin-bottom:12px}
+.bidrow{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-top:1px dashed var(--line-strong)}
+.bidrow:first-of-type{border-top:none}
+.notice{background:var(--amber-soft);border-left:3px solid var(--amber);padding:10px 14px;font-size:12.5px;color:var(--amber-deep);border-radius:0 8px 8px 0;margin-top:16px}
+.maplinks{display:flex;gap:8px;margin-top:14px}
+.lock{filter:blur(4px);user-select:none;pointer-events:none}
+.tiercard{display:flex;flex-direction:column;gap:3px;text-align:left;background:#fff;border:1.5px solid var(--line-strong);border-radius:10px;padding:10px;cursor:pointer;font:inherit}
+.tiercard b{font-size:13px;color:var(--ink)}
+.tiercard .tp{font-size:12px;font-weight:700;color:var(--amber-deep)}
+.tiercard .td{font-size:10.5px;color:var(--ink-soft);line-height:1.35}
+.tiercard.sel{border-color:var(--pine);background:var(--pine-soft);box-shadow:0 0 0 1px var(--pine)}
+.gate{background:var(--pine-soft);border:1px dashed var(--pine);border-radius:8px;padding:10px 12px;font-size:12.5px;color:var(--pine);margin-top:10px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+
+/* ============ PRICING MODAL ============ */
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:18px}
+.plan{border:1.5px solid var(--line);border-radius:12px;padding:18px;position:relative}
+.plan.hot{border-color:var(--amber)}
+.plan .tag{position:absolute;top:-10px;left:16px;background:var(--amber);color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:10px}
+.plan h4{font-family:var(--disp);font-size:18px}
+.plan .pp{font-family:var(--disp);font-size:26px;font-weight:700;margin:6px 0 2px}
+.plan .pp small{font-family:var(--body);font-size:12px;color:var(--ink-faint);font-weight:500}
+.plan ul{list-style:none;font-size:12.8px;color:var(--ink-soft);margin:10px 0 14px;display:flex;flex-direction:column;gap:6px}
+.plan ul li:before{content:'✓ ';color:var(--pine);font-weight:700}
+
+/* ============ ADMIN ============ */
+.adm{display:grid;grid-template-columns:228px minmax(0,1fr);min-height:100vh;background:#F1F1EA}
+.adm-side{background:var(--pine-deep);color:#C8D6CC;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.adm-logo{padding:18px 18px 14px;font-family:var(--disp);font-size:18px;font-weight:700;color:#fff;border-bottom:1px solid rgba(255,255,255,.12)}
+.adm-logo span{display:block;font-family:var(--body);font-size:10.5px;font-weight:600;letter-spacing:.14em;color:#E9C083;text-transform:uppercase;margin-top:2px}
+.adm-nav{padding:12px 10px;display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto}
+.adm-nav .sec{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#7E958A;padding:12px 10px 4px;font-weight:600}
+.anav{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13.5px;font-weight:500;color:#C8D6CC;text-align:left;width:100%}
+.anav:hover{background:rgba(255,255,255,.08);color:#fff}
+.anav.on{background:var(--amber);color:#fff}
+.anav .ic{width:18px;text-align:center;font-size:14px}
+.adm-foot{padding:14px 18px;border-top:1px solid rgba(255,255,255,.12);font-size:12px}
+.adm-main{padding:26px 32px 60px;max-width:1160px}
+.adm-hd{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.adm-hd h1{font-family:var(--disp);font-size:26px;font-weight:600}
+.adm-hd p{font-size:13px;color:var(--ink-soft)}
+.apanel{display:none}
+.apanel.on{display:block}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.kpi b{display:block;font-size:12px;color:var(--ink-soft);font-weight:500;margin-bottom:4px}
+.kpi .v{font-family:var(--disp);font-size:26px;font-weight:700;color:var(--pine-deep)}
+.kpi .d{font-size:11.5px;margin-top:3px;color:var(--pine);font-weight:600}
+.kpi .d.neg{color:var(--red)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.panel-hd{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.panel-hd h3{font-size:14.5px;font-weight:700}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);font-weight:600;padding:10px 16px;border-bottom:1px solid var(--line);background:#FBFBF7}
+.tbl td{padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#FAFAF4}
+.mono{font-family:var(--mono);font-size:12px}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;letter-spacing:.02em}
+.pill.g{background:var(--pine-soft);color:var(--pine)}
+.pill.a{background:var(--amber-soft);color:var(--amber-deep)}
+.pill.r{background:var(--red-soft);color:var(--red)}
+.pill.n{background:#ECECE4;color:var(--ink-soft)}
+.rowact{display:flex;gap:6px}
+.iconbtn{width:29px;height:29px;border:1px solid var(--line-strong);border-radius:7px;background:#fff;font-size:13px;display:inline-flex;align-items:center;justify-content:center}
+.iconbtn:hover{border-color:var(--pine);background:var(--pine-soft)}
+
+/* upload stepper */
+.steps{display:flex;gap:0;margin-bottom:22px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.step{flex:1;padding:13px 16px;font-size:13px;font-weight:600;color:var(--ink-faint);border-right:1px solid var(--line);display:flex;gap:9px;align-items:center}
+.step:last-child{border-right:none}
+.step .n{width:22px;height:22px;border-radius:50%;background:#ECECE4;display:inline-flex;align-items:center;justify-content:center;font-size:11.5px}
+.step.on{color:var(--pine);background:var(--pine-soft)}
+.step.on .n{background:var(--pine);color:#fff}
+.step.done{color:var(--pine)}
+.step.done .n{background:var(--pine);color:#fff}
+.drop{display:block;border:2px dashed var(--line-strong);border-radius:12px;padding:44px 24px;text-align:center;background:var(--card);cursor:pointer;transition:border-color .15s}
+.drop:hover{border-color:var(--pine)}
+.drop .big{font-size:34px}
+.drop h4{font-family:var(--disp);font-size:18px;margin:8px 0 4px}
+.drop p{font-size:13px;color:var(--ink-soft)}
+.maprow{display:grid;grid-template-columns:1fr 26px 1.2fr .7fr;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.maprow:last-child{border-bottom:none}
+.maprow select{border:1.5px solid var(--line-strong);border-radius:7px;padding:7px 10px;width:100%;background:#fff}
+.conf{font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;justify-self:start}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:16px 0}
+.vcell{background:var(--paper);border-radius:10px;padding:12px 14px}
+.vcell b{display:block;font-size:12px;color:var(--ink-soft);font-weight:500}
+.vcell .v{font-family:var(--disp);font-size:22px;font-weight:700}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.field label{font-size:12.5px;font-weight:600}
+.field input,.field select,.field textarea{border:1.5px solid var(--line-strong);border-radius:8px;padding:9px 12px;font-size:13.5px;background:#fff;font-family:var(--body)}
+.field small{font-size:11.5px;color:var(--ink-faint)}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--pine-deep);color:#fff;padding:11px 20px;border-radius:10px;font-size:13.5px;z-index:200;transition:transform .25s;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.audit-item{display:flex;gap:12px;padding:11px 18px;border-bottom:1px solid var(--line);font-size:13px;align-items:baseline}
+.audit-item:last-child{border-bottom:none}
+.audit-item .when{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);white-space:nowrap;width:150px;flex:none}
+.searchbar{border:1.5px solid var(--line-strong);border-radius:8px;padding:8px 12px;font-size:13px;min-width:200px;background:#fff}
+
+@media (max-width:980px){
+  .split{grid-template-columns:1fr;height:auto}
+  .mapwrap{height:320px}
+  .results{height:auto}
+  .dlg-grid{grid-template-columns:1fr}
+  .adm{grid-template-columns:1fr}
+  .adm-side{position:relative;height:auto}
+  .hd-search{display:none}
+}
+</style>
+</head>
+<body>
+<!-- ================= PUBLIC SITE (API-CONNECTED) ================= -->
+<div class="view on" id="view-public">
+  <header class="hd">
+    <div class="hd-in">
+      <a class="logo" href="#" onclick="return false"><span class="ll-mark">▤</span>Landroll<em>Leader</em></a>
+      <div class="hd-search">
+        <input id="q" type="search" placeholder="Search parcel, owner, street, or legal…" aria-label="Search parcels" oninput="debouncedFetch()">
+        <button aria-label="Search" onclick="fetchListings(true)">Search</button>
+      </div>
+      <nav class="hd-nav">
+        <a href="#" onclick="return false">Counties</a>
+        <button class="navlink" onclick="openBuyers()">Market intel</button>
+        <button class="navlink" onclick="openPlans()">Pricing</button>
+        <span id="nav-account"><button class="btn btn-amber btn-sm" onclick="openAccount('signin')">Sign in</button></span>
+        <button class="btn btn-ghost btn-sm" style="background:transparent;color:#DCE5DE;border-color:rgba(255,255,255,.35)" onclick="showAdmin()">Admin</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="sale-strip">
+    <div class="hd-in">
+      <span class="dot" aria-hidden="true"></span>
+      <span id="strip-text"><strong>Hinds County, MS</strong> · 2025 sale results published · next sale Monday, August 31, 2026</span>
+      <span style="margin-left:auto" id="countdown"></span>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="hd-in">
+      <select class="fsel" id="f-status" onchange="fetchListings(true)" aria-label="Status"><option value="">All statuses</option></select>
+      <select class="fsel" id="f-landuse" onchange="fetchListings(true)" aria-label="Use code"><option value="">All use codes</option></select>
+      <select class="fsel" id="f-bid" onchange="fetchListings(true)" aria-label="Opening amount">
+        <option value="">Any face value</option>
+        <option value="0-500">Under $500</option>
+        <option value="500-1500">$500 – $1,500</option>
+        <option value="1500-10000">$1,500 – $10,000</option>
+        <option value="10000-">Over $10,000</option>
+      </select>
+      <select class="fsel" id="f-signals" onchange="fetchListings(true)" aria-label="Investor signals">
+        <option value="">All parcels</option>
+        <option value="repeat">Repeat delinquent</option>
+        <option value="oos">Out-of-state owner</option>
+        <option value="repeat+oos">Repeat + absentee</option>
+      </select>
+      <span class="fcount"><b id="count">…</b> parcels</span>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="mapwrap">
+      <svg class="plat" viewBox="0 0 800 640" preserveAspectRatio="xMidYMid slice" aria-label="Stylized plat map of Hinds County parcels">
+        <rect width="800" height="640" fill="#EDF1E7"/>
+        <g stroke="#D8DFD0" stroke-width="1">
+          <path d="M100 0V640M200 0V640M300 0V640M400 0V640M500 0V640M600 0V640M700 0V640"/>
+          <path d="M0 80H800M0 160H800M0 240H800M0 320H800M0 400H800M0 480H800M0 560H800"/>
+        </g>
+        <path d="M620 0 C 590 120, 660 220, 610 330 C 570 430, 640 540, 600 640" fill="none" stroke="#B9CFDD" stroke-width="26" opacity=".8"/>
+        <path d="M620 0 C 590 120, 660 220, 610 330 C 570 430, 640 540, 600 640" fill="none" stroke="#9FBED2" stroke-width="3"/>
+        <path d="M0 210 C 180 190, 340 250, 520 225 C 640 210, 730 230, 800 220" fill="none" stroke="#fff" stroke-width="10"/>
+        <path d="M0 210 C 180 190, 340 250, 520 225 C 640 210, 730 230, 800 220" fill="none" stroke="#C9C8BD" stroke-width="1.5" stroke-dasharray="8 6"/>
+        <g font-family="IBM Plex Mono, monospace" font-size="11" fill="#A2AC9F">
+          <text x="110" y="70">JUD DIST 1</text><text x="110" y="470">JUD DIST 2</text>
+          <text x="640" y="330" fill="#7FA3BC" transform="rotate(80 640 330)">PEARL RIVER</text>
+        </g>
+      </svg>
+      <div id="pins"></div>
+      <div class="map-legend" aria-hidden="true">
+        <span><span class="lg-pin" style="background:var(--pine)"></span>Face value</span>
+        <span><span class="lg-pin" style="background:var(--amber)"></span>Selected</span>
+      </div>
+      <span class="map-cred">Plat view · positions approximate until GIS geocoding · county record is authoritative</span>
+    </div>
+
+    <div class="results">
+      <div class="res-hd"><h1>Tax sale parcels — Hinds County</h1></div>
+      <p class="res-sub">Lien sale (premium bid) · 2-year redemption · 1.5%/mo on face value · <a href="#" onclick="openAlerts();return false" style="color:var(--pine);font-weight:600;text-decoration:underline">Get alerts →</a> · <a href="#" onclick="csvExport();return false" style="color:var(--pine);font-weight:600;text-decoration:underline">Export CSV ⤓</a></p>
+      <div class="cards" id="cards"><p style="color:var(--ink-soft)">Loading live listings…</p></div>
+      <div style="text-align:center;margin-top:18px"><button class="btn btn-ghost" id="more" onclick="loadMore()" style="display:none">Load more parcels</button></div>
+    </div>
+  </div>
+
+  <!-- Detail modal -->
+  <div class="ovl" id="detail-ovl" role="dialog" aria-modal="true">
+    <div class="dlg">
+      <button class="dlg-x" onclick="closeDetail()" aria-label="Close">✕</button>
+      <div class="dlg-hero"><h2 id="d-title"></h2></div>
+      <div class="dlg-body">
+        <div class="dlg-grid">
+          <div>
+            <div id="d-stamp"></div>
+            <div class="spec" id="d-spec"></div>
+            <div class="notice">Premium-bid sale: bidding starts at the face value. Overbid earns no interest and is not returned. The owner may redeem within 2 years at 1.5% per month on the face value.</div>
+            <div class="maplinks" id="d-maplinks"></div>
+          </div>
+          <div>
+            <div class="bidbox">
+              <div class="oplbl">Face value (opening amount)</div>
+              <div class="op" id="d-open"></div>
+              <div style="margin-top:12px" id="d-breakdown"></div>
+              <div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);font-weight:600;margin-bottom:6px">Yield calculator <span style="background:var(--amber-soft);color:var(--amber-deep);padding:1px 8px;border-radius:8px;letter-spacing:0;text-transform:none;font-weight:700">Investor plan</span></div>
+              <div style="display:flex;gap:10px;font-size:12.5px;align-items:center;flex-wrap:wrap">
+                <label>Overbid $<input id="yc-over" type="number" value="0" min="0" step="50" style="width:78px;border:1.5px solid var(--line-strong);border-radius:6px;padding:4px 6px" oninput="yieldCalc()"></label>
+                <label>Redeemed at <select id="yc-months" onchange="yieldCalc()" style="border:1.5px solid var(--line-strong);border-radius:6px;padding:4px 6px">
+                  <option value="6">6 mo</option><option value="12" selected>12 mo</option><option value="18">18 mo</option><option value="24">24 mo</option></select></label>
+              </div>
+              <div id="yc-out" style="font-size:12.5px;margin-top:7px;color:var(--ink)"></div>
+              <p style="font-size:10.5px;color:var(--ink-faint);margin-top:5px">Estimate: 1.5%/mo on face value; overbid earns nothing and is not returned. Excludes statutory damages and subsequent taxes. Not investment advice.</p>
+            </div>
+            <div id="d-redeem" style="background:var(--pine-soft);border-radius:8px;padding:10px 12px;font-size:12.5px;color:var(--pine);margin-top:10px"></div>
+            </div>
+            <button class="btn btn-pine" style="width:100%;justify-content:center;margin-top:12px" onclick="toast('Added to your watchlist')">☆ Watch this parcel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pricing modal -->
+  <div class="ovl" id="plans-ovl" role="dialog" aria-modal="true">
+    <div class="dlg" style="max-width:820px">
+      <button class="dlg-x" onclick="closePlans()" aria-label="Close">✕</button>
+      <div class="dlg-body" style="padding-top:30px">
+        <h2 style="font-family:var(--disp);font-size:26px">Research faster. Bid smarter.</h2>
+        <p style="font-size:14px;color:var(--ink-soft);margin-top:4px">Counties list free. Investors choose a plan.</p>
+        <div class="plans">
+          <div class="plan">
+            <h4>Browse</h4><div class="pp">$0<small>/mo</small></div>
+            <ul><li>Full parcel lists &amp; map</li><li>Sale dates &amp; terms</li><li>3 watchlist parcels</li></ul>
+            <button class="btn btn-ghost" style="width:100%;justify-content:center">Current plan</button>
+          </div>
+          <div class="plan hot">
+            <span class="tag">Most popular</span>
+            <h4>Investor</h4><div class="pp">$49<small>/mo</small></div>
+            <ul><li>Yield &amp; max-bid calculator</li><li>Repeat-delinquent &amp; absentee filters</li><li>Instant list-change alerts</li><li>CSV export</li></ul>
+            <button class="btn btn-amber" style="width:100%;justify-content:center" onclick="closePlans();openAccount('signup','investor')">Start 7-day trial</button>
+          </div>
+          <div class="plan">
+            <h4>Pro desk</h4><div class="pp">$199<small>/mo</small></div>
+            <ul><li>Everything in Investor</li><li>Multi-county coverage</li><li>API access</li><li>5 team seats</li></ul>
+            <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="closePlans();openAccount('signup','pro')">Start Pro</button>
+          </div>
+        </div>
+        <p style="font-size:11.5px;color:var(--ink-faint);margin-top:16px">Landroll Leader supplements — and does not replace — statutory notice under Miss. Code Ann. § 27-41-55 et seq. County records remain authoritative. Nothing here is legal or investment advice.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ================= ADMIN (LIVE) ================= -->
+<div class="view" id="view-admin">
+<div id="admin-gate" style="display:none;position:fixed;inset:0;background:var(--paper);z-index:60;align-items:center;justify-content:center">
+  <div style="width:min(380px,92vw);background:#fff;border:1px solid var(--line);border-radius:14px;padding:30px 28px;box-shadow:0 20px 50px rgba(23,69,59,.12)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <div style="width:30px;height:30px;border-radius:7px;background:var(--amber);color:#fff;display:grid;place-items:center;font-weight:800">L</div>
+      <div style="font-family:var(--disp);font-size:20px;font-weight:700;color:var(--pine)">Back office</div>
+    </div>
+    <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 16px">County staff only. Sign-ins are recorded in the audit log.</p>
+    <div class="field"><label>Your name <span style="color:var(--ink-faint);font-weight:400">(for the audit trail)</span></label>
+      <input id="login-name" placeholder="e.g. E. Dunn, Deputy Clerk"></div>
+    <div class="field"><label>Password</label>
+      <input id="login-pass" type="password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div id="login-err" style="display:none;color:var(--red);font-size:12.5px;margin-bottom:10px"></div>
+    <button class="btn btn-pine" style="width:100%;justify-content:center" onclick="doLogin()">Sign in</button>
+    <a href="#" onclick="showPublic();return false" style="display:block;text-align:center;font-size:12.5px;color:var(--ink-soft);margin-top:12px">← Back to the public site</a>
+  </div>
+</div>
+  <div class="adm">
+    <aside class="adm-side">
+      <div class="adm-logo">Landroll Leader<span>Back office</span></div>
+      <nav class="adm-nav">
+        <button class="anav on" data-p="dash" onclick="goPanel('dash',this)"><span class="ic">▦</span>Dashboard</button>
+        <div class="sec">Land rolls</div>
+        <button class="anav" data-p="upload" onclick="goPanel('upload',this)"><span class="ic">⇪</span>Upload land roll</button>
+        <button class="anav" data-p="listings" onclick="goPanel('listings',this);admFetch()"><span class="ic">▤</span>Listings</button>
+        <div class="sec">Platform</div>
+        <button class="anav" data-p="audit" onclick="goPanel('audit',this);loadAudit()"><span class="ic">✎</span>Audit log</button>
+        <div style="margin-top:auto;padding-top:14px;border-top:1px solid var(--line)">
+          <div id="adm-whoami" style="font-size:11.5px;color:var(--ink-soft);margin-bottom:8px"></div>
+          <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="doLogout()">Sign out</button>
+        </div>
+      </nav>
+      <div class="adm-foot">
+        <div style="color:#fff;font-weight:600">County admin</div>
+        <button class="navlink" style="color:#E9C083;padding:4px 0;font-size:12.5px" onclick="showPublic()">← View public site</button>
+      </div>
+    </aside>
+
+    <main class="adm-main">
+      <!-- DASHBOARD -->
+      <section class="apanel on" id="p-dash">
+        <div class="adm-hd"><div><h1>Dashboard</h1><p id="dash-sub">Live platform statistics</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn btn-ghost" target="_blank" href="/api/export/notice.html?sale_event=hinds-2025&qr=1">🖨 Statutory notice (print)</a>
+          <button class="btn btn-ghost" onclick="viewOutbox()">✉ Alert outbox</button>
+          <button class="btn btn-ghost" onclick="runGeocode()">◎ Geocode parcels</button>
+          <button class="btn btn-amber" onclick="goPanel('upload',document.querySelector('[data-p=upload]'))">⇪ Upload a land roll</button></div></div>
+        <div class="kpis" id="kpis"></div>
+        <div class="panel"><div class="panel-hd"><h3>What these numbers mean for the county</h3></div>
+          <div style="padding:14px 18px;font-size:13.5px;color:var(--ink-soft)">
+            Wider investor reach means more competitive bidding and better collection rates. Every publish is
+            timestamped with a file hash for the county's records, and "mark paid" removes a parcel from
+            public listings within seconds of redemption.
+          </div></div>
+      </section>
+
+      <!-- UPLOAD (LIVE) -->
+      <section class="apanel" id="p-upload">
+        <div class="adm-hd"><div><h1>Upload land roll</h1><p>Hinds County — this uploads to the live API</p></div></div>
+        <div class="steps">
+          <div class="step on" id="st1"><span class="n">1</span>Upload file</div>
+          <div class="step" id="st2"><span class="n">2</span>Mapping &amp; validation</div>
+          <div class="step" id="st3"><span class="n">3</span>Publish</div>
+        </div>
+        <div id="up-1">
+          <label class="drop" for="filepick"><div class="big">⇪</div><h4>Choose your delinquent roll</h4><p>XLSX or CSV, straight from your tax software — no reformatting needed.</p>
+          <input id="filepick" type="file" accept=".xlsx,.xlsm,.csv" style="display:none" onchange="doUpload(this.files[0])"></label>
+          <p id="up-progress" style="font-size:13px;color:var(--ink-soft);margin-top:10px"></p>
+        </div>
+        <div id="up-2" style="display:none">
+          <div class="panel"><div class="panel-hd"><h3 id="map-title">Column mapping</h3><span style="font-size:12px;color:var(--ink-soft)" id="map-note"></span></div>
+            <div style="padding:8px 18px 14px" id="map-rows"></div>
+          </div>
+          <div class="panel"><div class="panel-hd"><h3>Validation</h3></div>
+            <div style="padding:4px 18px 16px"><div class="vgrid" id="vgrid"></div><p style="font-size:13px;color:var(--ink-soft)" id="vnote"></p></div>
+          </div>
+          <div style="display:flex;justify-content:space-between"><button class="btn btn-ghost" onclick="upStep(1)">← Start over</button><button class="btn btn-pine" onclick="upStep(3)">Continue to publish →</button></div>
+        </div>
+        <div id="up-3" style="display:none">
+          <div class="panel"><div class="panel-hd"><h3 id="pub-title">Publish</h3></div>
+            <div style="padding:16px 18px">
+              <p style="font-size:13.5px;margin-bottom:12px">Publishing makes this list public and records a permanent timestamp and file hash for the county's files. This supplements — it does not replace — statutory newspaper notice.</p>
+              <div class="field" style="max-width:340px"><label>Type the county name to confirm</label><input id="confirm-county" placeholder="Hinds"></div>
+              <button class="btn btn-amber" onclick="doPublish()">Publish list</button>
+              <p id="pub-result" style="font-size:13px;margin-top:10px"></p>
+            </div>
+          </div>
+          <button class="btn btn-ghost" onclick="upStep(2)">← Back</button>
+        </div>
+      </section>
+
+      <!-- LISTINGS (LIVE) -->
+      <section class="apanel" id="p-listings">
+        <div class="adm-hd"><div><h1>Listings</h1><p>Live parcel management — changes hit the public site instantly</p></div>
+          <input class="searchbar" id="adm-q" placeholder="Filter by parcel or owner…" oninput="admDebounce()"></div>
+        <div class="panel"><table class="tbl">
+          <thead><tr><th>Parcel</th><th>Owner of record</th><th>Face value</th><th>Signals</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="adm-rows"><tr><td colspan="6" style="color:var(--ink-soft)">Loading…</td></tr></tbody>
+        </table></div>
+        <p style="font-size:12px;color:var(--ink-faint)">"Mark paid" flags the parcel publicly within seconds and writes to the audit trail. Status changes are never deleted, only reversed.</p>
+      </section>
+
+      <!-- AUDIT (LIVE) -->
+      <section class="apanel" id="p-audit">
+        <div class="adm-hd"><div><h1>Audit log</h1><p>Immutable record — the county's proof of what was public, when</p></div></div>
+        <div class="panel" id="audit-list"></div>
+      </section>
+    </main>
+  </div>
+</div>
+<footer style="max-width:1180px;margin:40px auto 0;padding:22px 24px 30px;border-top:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--ink-faint)">
+  <span>© 2026 Landroll Leader · Supplements, does not replace, official county tax-sale notice.</span>
+  <span><a href="/legal/terms.html" style="color:var(--ink-faint)">Terms of Service</a> · <a href="/legal/privacy.html" style="color:var(--ink-faint)">Privacy Policy</a> · <a href="mailto:help@landrollleader.com" style="color:var(--ink-faint)">help@landrollleader.com</a></span>
+</footer>
+<!-- Account modal -->
+<div class="ovl" id="account-ovl" role="dialog" aria-modal="true">
+  <div class="dlg" style="max-width:520px">
+    <button class="dlg-x" onclick="closeAccount()" aria-label="Close">✕</button>
+    <div class="dlg-body" style="padding-top:26px">
+      <div style="display:flex;gap:6px;margin-bottom:16px">
+        <button id="acct-tab-signin" class="btn btn-ghost btn-sm" onclick="acctMode('signin')">Sign in</button>
+        <button id="acct-tab-signup" class="btn btn-ghost btn-sm" onclick="acctMode('signup')">Create account</button>
+      </div>
+      <div id="acct-signup-fields">
+        <div class="field"><label>Name</label><input id="su-name" placeholder="Jordan Thomas"></div>
+      </div>
+      <div class="field"><label>Email</label><input id="su-email" type="email" placeholder="you@example.com"></div>
+      <div class="field" id="acct-pass-field"><label>Password <span id="su-pwhint" style="color:var(--ink-faint);font-weight:400">(8+ characters)</span></label>
+        <input id="su-pass" type="password" onkeydown="if(event.key==='Enter')acctSubmit()">
+        <a href="#" id="acct-forgot" onclick="acctMode('forgot');return false" style="font-size:12px;color:var(--ink-soft);display:inline-block;margin-top:6px">Forgot password?</a></div>
+      <div id="acct-tiers">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);font-weight:600;margin:2px 0 8px">Choose your plan</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px" id="tier-cards">
+          <button type="button" class="tiercard" data-tier="browse" onclick="pickTier('browse')">
+            <b>Browse</b><span class="tp">Free</span><span class="td">Search &amp; map every listing</span></button>
+          <button type="button" class="tiercard" data-tier="investor" onclick="pickTier('investor')">
+            <b>Investor</b><span class="tp">$49/mo</span><span class="td">CSV export, alerts, yield tools</span></button>
+          <button type="button" class="tiercard" data-tier="pro" onclick="pickTier('pro')">
+            <b>Pro desk</b><span class="tp">$199/mo</span><span class="td">Buyer intel, API, multi-county</span></button>
+        </div>
+      </div>
+      <div id="acct-err" style="display:none;color:var(--red);font-size:12.5px;margin:10px 0 0"></div>
+      <button class="btn btn-pine" id="acct-go" style="width:100%;justify-content:center;margin-top:14px" onclick="acctSubmit()">Create account</button>
+      <p id="acct-note" style="font-size:11px;color:var(--ink-faint);margin-top:10px">Paid plans continue to secure checkout after your account is created.</p>
+      <p style="font-size:11px;color:var(--ink-faint);margin-top:6px">By creating an account you agree to the <a href="/legal/terms.html" target="_blank" style="color:var(--ink-faint);text-decoration:underline">Terms of Service</a> and <a href="/legal/privacy.html" target="_blank" style="color:var(--ink-faint);text-decoration:underline">Privacy Policy</a>.</p>
+    </div>
+  </div>
+</div>
+<!-- Buyers modal -->
+<div class="ovl" id="buyers-ovl" role="dialog" aria-modal="true">
+  <div class="dlg" style="max-width:680px">
+    <button class="dlg-x" onclick="closeBuyers()" aria-label="Close">✕</button>
+    <div class="dlg-body" style="padding-top:28px">
+      <h2 style="font-family:var(--disp);font-size:24px">Who's buying Hinds County</h2>
+      <p style="font-size:13px;color:var(--ink-soft);margin:4px 0 14px" id="buyers-sub"></p>
+      <div class="panel" style="margin:0"><table class="tbl">
+        <thead><tr><th>Buyer</th><th>Parcels</th><th>Share</th><th>Face value</th><th>Avg overbid</th></tr></thead>
+        <tbody id="buyers-rows"></tbody></table></div>
+      <p style="font-size:11px;color:var(--ink-faint);margin-top:10px">From the county's published sale results. Pro desk includes multi-county buyer tracking and API access.</p>
+    </div>
+  </div>
+</div>
+<!-- Alerts modal -->
+<div class="ovl" id="alerts-ovl" role="dialog" aria-modal="true">
+  <div class="dlg" style="max-width:460px">
+    <button class="dlg-x" onclick="closeAlerts()" aria-label="Close">✕</button>
+    <div class="dlg-body" style="padding-top:28px">
+      <h2 style="font-family:var(--disp);font-size:22px">Alert me on new matches</h2>
+      <p style="font-size:13px;color:var(--ink-soft);margin:4px 0 12px">Uses your current filters. When a county publishes parcels that match, you'll get an email.</p>
+      <div class="field"><label>Email</label><input id="alert-email" type="email" placeholder="you@example.com"></div>
+      <div id="alert-filters" style="font-size:12px;color:var(--ink-soft);background:var(--paper);border-radius:8px;padding:8px 10px;margin-bottom:12px"></div>
+      <button class="btn btn-pine" style="width:100%;justify-content:center" onclick="saveAlert()">Save alert</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= API layer ================= */
+const API = location.origin;
+let ADMIN_ACTOR = null;
+async function ensureAuth(){
+  try{
+    const d = await (await fetch(`${API}/api/auth/me`)).json();
+    if(d.authenticated){ ADMIN_ACTOR = d.actor; return true; }
+  }catch(e){}
+  return false;
+}
+async function doLogin(){
+  $('login-err').style.display='none';
+  const r = await fetch(`${API}/api/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({password:$('login-pass').value, name:$('login-name').value.trim()})});
+  const d = await r.json();
+  if(!r.ok){ $('login-err').textContent = d.error || 'Sign-in failed.'; $('login-err').style.display='block'; return; }
+  ADMIN_ACTOR = d.actor; $('login-pass').value='';
+  $('admin-gate').style.display='none';
+  $('adm-whoami').textContent = 'Signed in as ' + ADMIN_ACTOR;
+  toast('Welcome, ' + ADMIN_ACTOR);
+  loadStats();
+}
+async function doLogout(){
+  await fetch(`${API}/api/auth/logout`,{method:'POST'});
+  ADMIN_ACTOR = null; toast('Signed out'); showPublic();
+}
+const $=id=>document.getElementById(id);
+const fmt=n=>n==null?'—':'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* approximate pin positions: parcels cluster by assessor map sheet (true GIS geocoding replaces this) */
+let sheetCells={};
+function buildSheetGrid(list){
+  const sheets=[...new Set(list.map(l=>l.map_sheet).filter(Boolean))].sort();
+  const cols=Math.max(1,Math.ceil(Math.sqrt(sheets.length)));
+  sheetCells={};
+  sheets.forEach((s,i)=>{sheetCells[s]={cx:10+((i%cols)+0.5)*(80/cols), cy:12+((Math.floor(i/cols))+0.5)*(76/Math.ceil(sheets.length/cols))};});
+}
+let geoBounds=null;
+function buildGeoBounds(list){
+  const pts=list.filter(l=>l.lat!=null&&l.lng!=null);
+  if(pts.length<2){geoBounds=null;return;}
+  const lats=pts.map(p=>p.lat),lngs=pts.map(p=>p.lng);
+  geoBounds={minLat:Math.min(...lats),maxLat:Math.max(...lats),minLng:Math.min(...lngs),maxLng:Math.max(...lngs)};
+}
+function pos(l){
+  // Real coordinates (from /api/geocode/run) project into the map frame.
+  if(l.lat!=null&&l.lng!=null&&geoBounds){
+    const dLat=(geoBounds.maxLat-geoBounds.minLat)||1, dLng=(geoBounds.maxLng-geoBounds.minLng)||1;
+    return {x:8+((l.lng-geoBounds.minLng)/dLng)*84, y:10+(1-(l.lat-geoBounds.minLat)/dLat)*76};
+  }
+  // Fallback: cluster by assessor map sheet until geocoding covers this parcel.
+  let h=0;for(const c of String(l.parcel_number))h=(h*31+c.charCodeAt(0))>>>0;
+  const cell=l.map_sheet&&sheetCells[l.map_sheet];
+  if(cell)return {x:cell.cx-4+(h%800)/100, y:cell.cy-4+((h>>>8)%800)/100};
+  return {x:8+(h%8400)/100, y:10+((h>>>8)%7600)/100};
+}
+
+const STATUS_LABEL={active:"Active",sold:"Sold 2025",prev_paid:"Paid before sale",paid_before_sale:"Paid before sale",struck_to_state:"Struck to state"};
+function stampFor(s){const cls=s==='active'?'active':(s==='sold'?'active':(s==='struck_to_state'?'struck':'paid'));
+  return `<span class="stamp ${cls}">${STATUS_LABEL[s]||s}</span>`;}
+
+/* ================= public listings ================= */
+let page=1, lastQuery="", accumulated=[];
+function queryString(reset){
+  if(reset) page=1;
+  const p=new URLSearchParams({county:"hinds",page:String(page),per_page:"24",sort:"total_desc"});
+  const q=$('q').value.trim(); if(q)p.set('q',q);
+  const st=$('f-status').value; if(st)p.set('status',st);
+  const lu=$('f-landuse').value; if(lu)p.set('land_use',lu);
+  const bid=$('f-bid').value;
+  if(bid){const[a,b]=bid.split('-'); if(a)p.set('min_total',a); if(b)p.set('max_total',b);}
+  const sig=$('f-signals').value;
+  if(sig.includes('repeat'))p.set('repeat_delinquent','true');
+  if(sig.includes('oos'))p.set('out_of_state','true');
+  return p.toString();
+}
+async function fetchListings(reset){
+  const qs=queryString(reset); lastQuery=qs;
+  try{
+    const r=await fetch(`${API}/api/listings?${qs}`); const data=await r.json();
+    if(qs!==lastQuery)return;
+    if(page===1)accumulated=[];
+    accumulated=accumulated.concat(data.results);
+    buildSheetGrid(accumulated); buildGeoBounds(accumulated);
+    $('count').textContent=data.total.toLocaleString();
+    renderCards(); renderPins();
+    $('more').style.display=accumulated.length<data.total?'inline-flex':'none';
+    $('more').textContent=`Load more (showing ${accumulated.length.toLocaleString()} of ${data.total.toLocaleString()})`;
+  }catch(e){ $('cards').innerHTML='<p style="color:var(--ink-soft)">Could not reach the listings API. Is the server running?</p>'; }
+}
+function loadMore(){page++;fetchListings(false);}
+let debT; function debouncedFetch(){clearTimeout(debT);debT=setTimeout(()=>fetchListings(true),300);}
+
+function thumb(l,i){
+  const seed=(i*37+7);
+  const trees=[...Array(5)].map((_,k)=>`<circle cx="${(seed*7+k*53)%280+10}" cy="${60+((seed+k*29)%40)}" r="${7+(k%3)*3}" fill="#3E7A5F" opacity=".55"/>`).join('');
+  return `<svg viewBox="0 0 300 118" preserveAspectRatio="xMidYMid slice"><rect width="300" height="118" fill="#2A5A4C"/><g stroke="#fff" stroke-width=".6" opacity=".14"><path d="M75 0V118M150 0V118M225 0V118M0 40H300M0 80H300"/></g>${trees}<text x="288" y="16" text-anchor="end" font-family="IBM Plex Mono" font-size="10" fill="#CFE0D4">JD ${esc(l.judicial_district??'')}</text></svg>`;
+}
+function signalBadges(l){
+  const b=[];
+  if(l.repeat_delinquent)b.push(`<span class="cls" style="background:var(--amber-soft);color:var(--amber-deep)">Repeat ${l.repeat_delinquent_years.join(', ')}</span>`);
+  if(l.owner_out_of_state)b.push(`<span class="cls" style="background:var(--red-soft);color:var(--red)">Absentee ${esc(l.owner_mail_state)}</span>`);
+  if(l.homestead_exempt)b.push(`<span class="cls">Homestead</span>`);
+  return b.join(' ');
+}
+function renderCards(){
+  $('cards').innerHTML=accumulated.map((l,i)=>`
+  <article class="pc" data-id="${esc(l.parcel_number)}" onclick="openDetail('${esc(l.parcel_number)}')" onmouseenter="hotPin('${esc(l.parcel_number)}',1)" onmouseleave="hotPin('${esc(l.parcel_number)}',0)">
+    <div class="pc-img">${thumb(l,i)}<span class="pc-acres">${l.true_value?'True value '+fmt(l.true_value).replace('.00',''):'Use '+esc(l.land_use_code??'—')}</span>${stampFor(l.status)}</div>
+    <div class="pc-body">
+      <div class="pc-bid">${fmt(l.total_opening_amount)}<small>face value</small></div>
+      <div class="pc-meta"><span>${esc(l.situs_address||'No situs address')}</span></div>
+      <div class="pc-legal">${esc((l.legal_description||'').slice(0,90))}${(l.legal_description||'').length>90?'…':''}</div>
+      <div class="pc-parcel"><span>${esc(l.parcel_number)}</span><span style="display:flex;gap:4px">${signalBadges(l)}</span></div>
+    </div></article>`).join('')||'<p style="color:var(--ink-soft)">No parcels match — clear a filter to widen the search.</p>';
+}
+function renderPins(){
+  $('pins').innerHTML=accumulated.slice(0,120).map(l=>{
+    const p=pos(l);
+    const short=l.total_opening_amount>=1000?('$'+(l.total_opening_amount/1000).toFixed(l.total_opening_amount>=10000?0:1)+'k'):('$'+Math.round(l.total_opening_amount||0));
+    return `<button class="pin ${l.status==='struck_to_state'?'struck':''}" data-id="${esc(l.parcel_number)}" style="left:${p.x}%;top:${p.y}%" onclick="openDetail('${esc(l.parcel_number)}')" aria-label="Parcel ${esc(l.parcel_number)}, face value ${fmt(l.total_opening_amount)}">${short}</button>`;
+  }).join('');
+}
+function hotPin(id,on){const el=document.querySelector(`.pin[data-id="${CSS.escape(id)}"]`);if(el)el.classList.toggle('hot',!!on);}
+
+async function loadFacets(){
+  try{
+    const f=await(await fetch(`${API}/api/facets?county=hinds`)).json();
+    $('f-status').innerHTML='<option value="">All statuses</option>'+f.status.map(s=>`<option value="${esc(s.value)}">${STATUS_LABEL[s.value]||s.value} (${s.n.toLocaleString()})</option>`).join('');
+    $('f-landuse').innerHTML='<option value="">All use codes</option>'+f.land_use.map(u=>`<option value="${esc(u.value)}">Use ${esc(u.value)} (${u.n.toLocaleString()})</option>`).join('');
+  }catch(e){}
+}
+
+/* ================= detail ================= */
+async function openDetail(pid){
+  const l=accumulated.find(x=>x.parcel_number===pid)||await(await fetch(`${API}/api/listings/${encodeURIComponent(pid)}`)).json();
+  if(!l||l.error)return;
+  $('d-title').textContent=l.situs_address||('Parcel '+(l.parcel_display||l.parcel_number));
+  $('d-stamp').innerHTML=stampFor(l.status).replace('class="stamp','style="position:static;display:inline-block;transform:rotate(-2deg)" class="stamp');
+  $('d-spec').innerHTML=`
+    <div><b>Parcel</b><span class="mono">${esc(l.parcel_number)}</span></div><div><b>Display no.</b><span class="mono">${esc(l.parcel_display||'—')}</span></div>
+    <div><b>Owner of record</b>${esc(l.owner_name_of_record)}</div><div><b>Owner mails to</b>${esc([l.owner_mail_city,l.owner_mail_state].filter(Boolean).join(', ')||'—')}</div>
+    <div style="grid-column:1/-1"><b>Legal description</b>${esc(l.legal_description)}</div>
+    <div><b>True value</b>${fmt(l.true_value)}</div><div><b>Assessed (land + imp)</b>${fmt(l.assessed_land_value)} + ${fmt(l.assessed_improvement_value)}</div>
+    <div><b>Deed book / page</b><span class="mono">${esc(l.deed_book??'—')} / ${esc(l.deed_page??'—')}</span></div><div><b>Judicial district</b>${esc(l.judicial_district??'—')}</div>
+    <div><b>Prior tax sales</b>${l.repeat_delinquent_years?.length?esc(l.repeat_delinquent_years.join(', ')):'None on file'}</div><div><b>Homestead</b>${l.homestead_exempt?'Yes':'No'}</div>
+    ${l.status==='sold'?`<div><b>Sold to (2025)</b>${esc(l.sold_to)}</div><div><b>Excess bid</b>${fmt(l.excess_bid)}</div>`:''}
+    <div><b>Redemption deadline</b>${esc(l.redemption_deadline||'—')}</div><div><b>GIS map no.</b><span class="mono">${esc(l.gis_map_number||'—')}</span></div>`;
+  $('d-open').textContent=fmt(l.total_opening_amount);
+  $('d-breakdown').innerHTML=`
+    <div class="bidrow"><span>County tax</span><b>${fmt(l.county_tax)}</b></div>
+    <div class="bidrow"><span>Municipal tax</span><b>${fmt(l.municipal_tax)}</b></div>
+    <div class="bidrow"><span>School district tax</span><b>${fmt(l.school_tax)}</b></div>
+    <div class="bidrow"><span>Fees &amp; costs</span><b>${fmt(l.fees)}</b></div>
+    <div class="bidrow"><span>Interest</span><b>${fmt(l.penalties_interest)}</b></div>
+    ${l.prior_years_included_amount?`<div class="bidrow"><span>Prior years rolled in</span><b>${fmt(l.prior_years_included_amount)}</b></div>`:''}`;
+  curDetail=l; yieldCalc(); loadRedemption(l.parcel_number);
+  const gq=encodeURIComponent((l.situs_address?l.situs_address+', ':'')+'Hinds County, MS');
+  $('d-maplinks').innerHTML=`<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${gq}">⌖ Google Maps</a>
+    <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://maps.apple.com/?q=${gq}"> Apple Maps</a>`;
+  $('detail-ovl').classList.add('on');
+}
+function closeDetail(){$('detail-ovl').classList.remove('on')}
+function openPlans(){$('plans-ovl').classList.add('on')}
+function closePlans(){$('plans-ovl').classList.remove('on')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDetail();closePlans();closeBuyers();closeAlerts();closeAccount();}});
+['detail-ovl','plans-ovl','buyers-ovl','alerts-ovl','account-ovl'].forEach(id=>$(id).addEventListener('click',e=>{if(e.target.id===id)$(id).classList.remove('on');}));
+
+/* ================= investor accounts ================= */
+let acctModeName='signin', acctTier='investor', CUR_USER=null;
+function openAccount(mode, tier){
+  acctMode(mode||'signin');
+  if(tier)pickTier(tier);
+  $('account-ovl').classList.add('on');
+  setTimeout(()=>$(acctModeName==='signup'?'su-name':'su-email').focus(),50);
+}
+function closeAccount(){$('account-ovl').classList.remove('on');$('acct-err').style.display='none';}
+let resetToken=null;
+function acctMode(m){
+  acctModeName=m;
+  const su=m==='signup', fp=m==='forgot', rs=m==='reset';
+  $('acct-signup-fields').style.display=su?'':'none';
+  $('acct-tiers').style.display=su?'':'none';
+  $('acct-note').style.display=su?'':'none';
+  $('su-pwhint').style.display=(su||rs)?'':'none';
+  $('acct-pass-field').style.display=fp?'none':'';
+  $('su-email').parentElement.style.display=rs?'none':'';
+  $('acct-forgot').style.display=m==='signin'?'':'none';
+  $('acct-go').textContent=su?'Create account':fp?'Send reset link':rs?'Set new password':'Sign in';
+  document.querySelector('#acct-pass-field label').firstChild.textContent=rs?'New password ':'Password ';
+  $('acct-tab-signup').classList.toggle('btn-pine',su);
+  $('acct-tab-signin').classList.toggle('btn-pine',!su&&!fp&&!rs);
+  if(su&&!document.querySelector('.tiercard.sel'))pickTier(acctTier);
+}
+function pickTier(t){
+  acctTier=t;
+  document.querySelectorAll('.tiercard').forEach(c=>c.classList.toggle('sel',c.dataset.tier===t));
+}
+async function acctSubmit(){
+  $('acct-err').style.display='none';
+  let path, body;
+  if(acctModeName==='signup'){path='signup';body={name:$('su-name').value.trim(),email:$('su-email').value.trim(),password:$('su-pass').value,tier:acctTier};}
+  else if(acctModeName==='forgot'){path='forgot';body={email:$('su-email').value.trim()};}
+  else if(acctModeName==='reset'){path='reset';body={token:resetToken,password:$('su-pass').value};}
+  else {path='login';body={email:$('su-email').value.trim(),password:$('su-pass').value};}
+  const r=await fetch(`${API}/api/users/${path}`,{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();
+  if(!r.ok){$('acct-err').textContent=d.error||'Something went wrong.';$('acct-err').style.display='block';return;}
+  if(acctModeName==='forgot'){toast(d.message);closeAccount();return;}
+  if(acctModeName==='reset'){toast(d.message);resetToken=null;history.replaceState(null,'',location.pathname);acctMode('signin');$('su-pass').value='';return;}
+  CUR_USER=d; renderNavAccount(); closeAccount(); $('su-pass').value='';
+  if(acctModeName==='signup'&&d.tier!=='browse'){
+    toast(`Welcome, ${d.name} — setting up ${d.tier} billing…`);
+    await checkout(d.tier);
+  } else {
+    toast(`Welcome${d.name?', '+d.name:''}!`);
+  }
+}
+function renderNavAccount(){
+  if(CUR_USER&&CUR_USER.authenticated!==false){
+    $('nav-account').innerHTML=`<span style="font-size:12px;color:#DCE5DE;margin-right:8px">${esc(CUR_USER.name||CUR_USER.email)} · <b style="color:#E9C083;text-transform:capitalize">${esc(CUR_USER.tier)}</b></span>
+      <button class="btn btn-ghost btn-sm" style="background:transparent;color:#DCE5DE;border-color:rgba(255,255,255,.35)" onclick="userLogout()">Sign out</button>`;
+  } else {
+    $('nav-account').innerHTML=`<button class="btn btn-amber btn-sm" onclick="openAccount('signin')">Sign in</button>`;
+  }
+}
+async function userLogout(){
+  await fetch(`${API}/api/users/logout`,{method:'POST'});
+  CUR_USER=null; renderNavAccount(); toast('Signed out');
+}
+async function csvExport(){
+  const qs=new URLSearchParams(currentFilterObject()).toString();
+  const r=await fetch(`${API}/api/export/listings.csv?${qs}`);
+  if(r.status===401){toast('Sign in to export');openAccount('signup','investor');return;}
+  if(r.status===403){toast('CSV export is on the Investor plan');openAccount('signup','investor');return;}
+  const blob=await r.blob();const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='landroll_listings.csv';a.click();
+}
+async function bootUser(){
+  try{const d=await(await fetch(`${API}/api/users/me`)).json();
+    if(d.authenticated){CUR_USER=d;renderNavAccount();}}catch(e){}
+}
+
+/* ================= billing ================= */
+async function checkout(plan){
+  try{
+    const r=await fetch(`${API}/api/billing/checkout`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan})});
+    const d=await r.json();
+    if(d.url)location.href=d.url; else toast(d.message||d.error||'Checkout unavailable');
+  }catch(e){toast('Checkout unavailable');}
+}
+
+/* ================= yield calc + redemption ================= */
+let curDetail=null;
+function yieldCalc(){
+  if(!curDetail)return;
+  const F=curDetail.total_opening_amount||0, B=Number($('yc-over').value)||0, m=Number($('yc-months').value);
+  const interest=F*0.015*m, profit=interest-B, cash=F+B;
+  const ret=cash?100*profit/cash:0, ann=ret*12/m;
+  $('yc-out').innerHTML=`Cash in: <b>${fmt(cash)}</b> · Interest earned: <b>${fmt(interest)}</b> · Net: <b style="color:${profit>=0?'var(--pine)':'var(--red)'}">${fmt(profit)}</b> (${ret.toFixed(1)}% · ~${ann.toFixed(1)}%/yr)`;
+}
+async function loadRedemption(pid){
+  $('d-redeem').textContent='';
+  try{
+    const r=await(await fetch(`${API}/api/listings/${encodeURIComponent(pid)}/redemption`)).json();
+    if(r.error)return;
+    $('d-redeem').innerHTML=`<b>For the owner:</b> estimated redemption today ≈ <b>${fmt(r.estimated_redemption)}</b> (${r.months_elapsed} months at ${r.monthly_rate_pct}%/mo on the face value). Redeem through <b>${esc(r.redemption_deadline||'—')}</b> at the Chancery Clerk's office. Official payoff comes from the Clerk.`;
+  }catch(e){}
+}
+
+/* ================= buyers ================= */
+async function openBuyers(){
+  $('buyers-ovl').classList.add('on');
+  try{
+    const d=await(await fetch(`${API}/api/buyers?county=hinds`)).json();
+    $('buyers-sub').textContent=`${d.sold_parcels.toLocaleString()} parcels sold · ${d.distinct_buyers.toLocaleString()} distinct buyers · 2025 results`;
+    $('buyers-rows').innerHTML=d.buyers.slice(0,12).map(b=>`<tr><td>${esc(b.buyer)}</td><td>${b.parcels.toLocaleString()}</td><td>${b.share_pct}%</td><td>${fmt(b.total_face)}</td><td>${fmt(b.avg_excess)}</td></tr>`).join('');
+  }catch(e){$('buyers-rows').innerHTML='<tr><td colspan="5">Could not load buyer data.</td></tr>';}
+}
+function closeBuyers(){$('buyers-ovl').classList.remove('on')}
+
+/* ================= alerts ================= */
+function currentFilterObject(){
+  const o={county:'hinds'};
+  const q=$('q').value.trim(); if(q)o.q=q;
+  if($('f-status').value)o.status=$('f-status').value;
+  if($('f-landuse').value)o.land_use=$('f-landuse').value;
+  const bid=$('f-bid').value; if(bid){const[a,b]=bid.split('-');if(a)o.min_total=a;if(b)o.max_total=b;}
+  const sig=$('f-signals').value;
+  if(sig.includes('repeat'))o.repeat_delinquent='true';
+  if(sig.includes('oos'))o.out_of_state='true';
+  return o;
+}
+function openAlerts(){
+  const f=currentFilterObject();
+  $('alert-filters').textContent='Current filters: '+(Object.keys(f).length>1?JSON.stringify(f):'all Hinds County parcels');
+  $('alerts-ovl').classList.add('on');
+}
+function closeAlerts(){$('alerts-ovl').classList.remove('on')}
+async function saveAlert(){
+  const email=$('alert-email').value.trim();
+  const r=await fetch(`${API}/api/alerts`,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email,filters:currentFilterObject()})});
+  const d=await r.json();
+  if(d.error)return toast('⚠ '+d.error);
+  closeAlerts(); toast('Alert saved — we\'ll email you on new matches');
+}
+
+/* ================= countdown ================= */
+(function(){const sale=new Date('2026-08-31T08:30:00-05:00');const d=Math.max(0,Math.ceil((sale-new Date())/86400000));$('countdown').textContent=d+' days until the 2026 sale';})();
+
+/* ================= admin ================= */
+async function showAdmin(){
+  $('view-public').classList.remove('on');$('view-admin').classList.add('on');window.scrollTo(0,0);
+  if(await ensureAuth()){ $('admin-gate').style.display='none'; $('adm-whoami').textContent='Signed in as '+ADMIN_ACTOR; loadStats(); }
+  else { $('admin-gate').style.display='flex'; setTimeout(()=>$('login-pass').focus(),50); }
+}
+function showPublic(){$('view-admin').classList.remove('on');$('view-public').classList.add('on');window.scrollTo(0,0);}
+function goPanel(p,btn){document.querySelectorAll('.apanel').forEach(x=>x.classList.remove('on'));$('p-'+p).classList.add('on');
+  document.querySelectorAll('.anav').forEach(x=>x.classList.remove('on'));if(btn)btn.classList.add('on');window.scrollTo(0,0);}
+function upStep(n){[1,2,3].forEach(k=>{$('up-'+k).style.display=k===n?'block':'none';
+  const s=$('st'+k);s.className='step'+(k<n?' done':k===n?' on':'');s.querySelector('.n').textContent=k<n?'✓':k;});}
+
+async function loadStats(){
+  try{
+    const s=await(await fetch(`${API}/api/stats`)).json();
+    $('kpis').innerHTML=`
+      <div class="kpi"><b>Published parcels</b><span class="v">${s.listings.toLocaleString()}</span></div>
+      <div class="kpi"><b>Active (unsold)</b><span class="v">${s.active.toLocaleString()}</span></div>
+      <div class="kpi"><b>Repeat delinquent</b><span class="v">${s.repeat_delinquent.toLocaleString()}</span></div>
+      <div class="kpi"><b>Out-of-state owners</b><span class="v">${s.out_of_state_owners.toLocaleString()}</span></div>
+      <div class="kpi"><b>Median face value</b><span class="v">${fmt(s.median_face_value)}</span></div>`;
+  }catch(e){$('kpis').innerHTML='<div class="kpi"><b>API offline</b><span class="v">—</span></div>';}
+}
+
+let currentUpload=null;
+async function doUpload(file){
+  if(!file)return;
+  $('up-progress').textContent='Uploading and processing '+file.name+'…';
+  const fd=new FormData(); fd.append('file',file); fd.append('county_id','hinds'); fd.append('sale_event_id','hinds-2026');
+  try{
+    const r=await fetch(`${API}/api/uploads`,{method:'POST',body:fd});
+    const d=await r.json();
+    if(d.error){$('up-progress').textContent='⚠ '+d.error;return;}
+    currentUpload=d;
+    $('map-title').textContent=file.name+' — column mapping';
+    $('map-note').textContent=d.used_saved_mapping?'Applied this county’s saved mapping':'Auto-detected mapping';
+    const confPill=c=>c==='high'||c==='high-merge'||c==='confirmed'
+      ?'<span class="conf" style="background:var(--pine-soft);color:var(--pine)">High</span>'
+      :'<span class="conf" style="background:var(--amber-soft);color:var(--amber-deep)">Review</span>';
+    $('map-rows').innerHTML=Object.entries(d.mapping).map(([h,m])=>
+      `<div class="maprow"><span class="mono">${esc(h)}</span><span>→</span><span>${esc(m.maps_to)}${m.confidence==='high-merge'?' (merged)':''}</span>${confPill(m.confidence)}</div>`).join('')
+      +(d.unmapped.length?`<div class="maprow"><span class="mono">${d.unmapped.map(esc).join(', ')}</span><span>→</span><span>— not mapped —</span><span class="conf" style="background:#ECECE4;color:var(--ink-soft)">Skipped</span></div>`:'');
+    const v=d.validation;
+    $('vgrid').innerHTML=`
+      <div class="vcell"><b>Rows accepted</b><span class="v" style="color:var(--pine)">${v.rows_accepted.toLocaleString()}</span></div>
+      <div class="vcell"><b>Blocked</b><span class="v" style="color:var(--red)">${v.rows_blocked.toLocaleString()}</span></div>
+      <div class="vcell"><b>Warnings</b><span class="v" style="color:var(--amber-deep)">${v.rows_with_warnings.toLocaleString()}</span></div>
+      <div class="vcell"><b>Repeat delinquent</b><span class="v">${v.repeat_delinquent.toLocaleString()}</span></div>`;
+    $('vnote').textContent=v.rows_blocked?'Blocked rows are excluded — download the error file from the API, fix in Excel, and re-upload just those rows.':'No blockers. Warnings publish normally and are noted in the report.';
+    $('pub-title').textContent=`Publish ${v.rows_accepted.toLocaleString()} parcels`;
+    upStep(2); $('up-progress').textContent='';
+  }catch(e){$('up-progress').textContent='⚠ Upload failed — is the API running?';}
+}
+async function doPublish(){
+  if(!currentUpload)return;
+  const r=await fetch(`${API}/api/uploads/${currentUpload.upload_id}/publish`,{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({confirm:$('confirm-county').value})});
+  const d=await r.json();
+  if(d.error){$('pub-result').innerHTML='⚠ '+esc(d.error);return;}
+  $('pub-result').innerHTML=`✓ Published ${d.parcels.toLocaleString()} parcels at ${esc(d.published_at)} — <a href="/" style="text-decoration:underline;color:var(--pine)">view the public site</a>`;
+  toast('Published · timestamp and file hash recorded');
+  loadStats(); fetchListings(true); loadFacets();
+}
+
+let admT; function admDebounce(){clearTimeout(admT);admT=setTimeout(admFetch,300);}
+async function admFetch(){
+  const q=$('adm-q').value.trim();
+  const r=await fetch(`${API}/api/listings?county=hinds&per_page=25${q?'&q='+encodeURIComponent(q):''}`);
+  const d=await r.json();
+  $('adm-rows').innerHTML=d.results.map(l=>{
+    const pill=l.status==='active'?'<span class="pill g">Active</span>':l.status==='sold'?'<span class="pill n">Sold 2025</span>':l.status==='paid_before_sale'||l.status==='prev_paid'?'<span class="pill r">Paid</span>':l.status==='struck_to_state'?'<span class="pill n">Struck to State</span>':l.status==='prev_paid'?'<span class="pill r">Paid</span>':'<span class="pill n">'+esc(String(l.status).replace(/_/g,' ').replace(/^./,c=>c.toUpperCase()))+'</span>';
+    const act=l.status==='active'
+      ?`<button class="btn btn-ghost btn-sm" onclick="setStatus('${esc(l.parcel_number)}','paid_before_sale')">Mark paid</button>`
+      :`<button class="btn btn-ghost btn-sm" onclick="setStatus('${esc(l.parcel_number)}','active')">Reactivate</button>`;
+    const sig=[l.repeat_delinquent?'Repeat':'',l.owner_out_of_state?'Absentee':''].filter(Boolean).join(' · ')||'—';
+    return `<tr><td class="mono">${esc(l.parcel_number)}</td><td>${esc(l.owner_name_of_record)}</td><td>${fmt(l.total_opening_amount)}</td><td style="font-size:12px">${sig}</td><td>${pill}</td><td class="rowact">${act}</td></tr>`;
+  }).join('')||'<tr><td colspan="6" style="color:var(--ink-soft)">Nothing published yet — upload a land roll first.</td></tr>';
+}
+async function setStatus(pid,status){
+  const r=await fetch(`${API}/api/listings/${encodeURIComponent(pid)}/status`,{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
+  const d=await r.json();
+  if(d.error)return toast('⚠ '+d.error);
+  toast(`${pid}: ${d.from} → ${d.to} — public site updated`);
+  admFetch(); fetchListings(true);
+}
+async function loadAudit(){
+  const r=await fetch(`${API}/api/audit`,{});
+  const list=await r.json();
+  $('audit-list').innerHTML=(list.error?[]:list).map(a=>`<div class="audit-item"><span class="when">${esc(a.at.slice(0,19).replace('T',' · '))}</span><span><b>${esc(a.actor)}</b> · ${esc(a.action)} · <span class="mono" style="font-size:11px">${esc(JSON.stringify(a.detail).slice(0,110))}</span></span></div>`).join('')||'<div class="audit-item">No entries yet.</div>';
+}
+async function runGeocode(){
+  const s=await(await fetch(`${API}/api/geocode/status`)).json();
+  if(s.error)return toast('⚠ '+s.error);
+  if(!s.remaining)return toast(`All ${s.geocoded.toLocaleString()} parcels geocoded`);
+  toast(`Geocoding ${Math.min(s.remaining,200).toLocaleString()} of ${s.remaining.toLocaleString()} remaining…`);
+  const r=await fetch(`${API}/api/geocode/run`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({limit:200})});
+  const d=await r.json();
+  if(d.error)return toast('⚠ '+d.error);
+  toast(`Resolved ${d.resolved} · ${d.total_geocoded.toLocaleString()} of ${d.total.toLocaleString()} mapped · ${d.remaining.toLocaleString()} left`);
+  fetchListings(true);
+}
+async function viewOutbox(){
+  const r=await fetch(`${API}/api/alerts/outbox/process`,{method:'POST'});
+  const d=await r.json();
+  if(d.error)return toast('⚠ '+d.error);
+  toast(`Mail (${d.provider}): ${d.counts.sent||0} sent · ${d.counts.queued||0} queued · ${d.counts.failed||0} failed`);
+}
+let toastT; function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),3000);}
+
+/* boot */
+loadFacets(); fetchListings(true); upStep(1); bootUser();
+if(location.hash.startsWith('#parcel='))openDetail(decodeURIComponent(location.hash.slice(8)));
+if(location.hash.startsWith('#reset=')){resetToken=location.hash.slice(7);openAccount('reset');}
+</script>
+</body>
+</html>
