@@ -792,12 +792,16 @@ async function csvExport(){
   const r=await fetch(`${API}/api/export/listings.csv?${qs}`);
   if(r.status===401){toast('Sign in to export');openAccount('signup','investor');return;}
   if(r.status===403){toast('CSV export is on the Investor plan');openAccount('signup','investor');return;}
+  if(r.status===402){toast('Finish checkout to unlock export…');await checkout(CUR_USER&&CUR_USER.tier||'investor');return;}
   const blob=await r.blob();const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);a.download='landroll_listings.csv';a.click();
 }
 async function bootUser(){
   try{const d=await(await fetch(`${API}/api/users/me`)).json();
     if(d.authenticated){CUR_USER=d;renderNavAccount();}}catch(e){}
+  const q=new URLSearchParams(location.search);
+  if(q.get('checkout')==='success'){toast('Payment received — your plan is active. Welcome aboard!');history.replaceState(null,'',location.pathname);}
+  else if(q.get('checkout')==='cancelled'){toast('Checkout cancelled — you can finish it anytime from Export.');history.replaceState(null,'',location.pathname);}
 }
 
 /* ================= billing ================= */

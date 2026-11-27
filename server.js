@@ -381,6 +381,10 @@ const PLANS = {
   investor: { name: "Investor", amount: 4900, interval: "month" },
   pro:      { name: "Pro desk", amount: 19900, interval: "month" },
 };
+// Railway holds the live key as STRIPE_RESTRICTED_KEY; accept either name.
+const stripeKey = () => process.env.STRIPE_SECRET_KEY || process.env.STRIPE_RESTRICTED_KEY || "";
+// Paid tiers unlock only once billing is settled (or comped by an admin / demo mode with no Stripe).
+const PAID_OK = new Set(["active", "demo", "comp"]);
 db.subscribers = db.subscribers || [];
 
 /* =========================================================
@@ -413,6 +417,10 @@ function requireTier(min) {
     if (TIERS.indexOf(u.tier) < TIERS.indexOf(min)) {
       return res.status(403).json({ error: `This feature is on the ${min} plan.`, upgrade: min, current: u.tier });
     }
+    if (min !== "browse" && !PAID_OK.has(u.billing_status)) {
+      return res.status(402).json({ error: "Finish checkout to unlock this feature.", upgrade: u.tier, current: u.tier,
+        billing_status: u.billing_status });
+    }
     req.user = u; next();
   };
 }
@@ -428,7 +436,7 @@ app.post("/api/users/signup", (req, res) => {
   const user = {
     id: crypto.randomUUID(), email: em, name: String(name || "").slice(0, 80) || em.split("@")[0],
     salt, password_hash: hashPw(password, salt), tier,
-    billing_status: tier === "browse" ? "n/a" : (process.env.STRIPE_SECRET_KEY ? "pending_checkout" : "demo"),
+    billing_status: tier === "browse" ? "n/a" : (stripeKey() ? "pending_checkout" : "demo"),
     created_at: new Date().toISOString(),
   };
   db.users.push(user); persist("users");
@@ -517,7 +525,8 @@ app.get("/api/users/me", (req, res) => {
 app.post("/api/billing/checkout", async (req, res) => {
   const plan = PLANS[req.body?.plan];
   if (!plan) return res.status(400).json({ error: "Unknown plan" });
-  const key = process.env.STRIPE_SECRET_KEY;
+  const key = stripeKey();
+  const buyer = userOf(req);
   if (!key) {
     return res.json({ demo: true, plan: req.body.plan,
       message: `Demo mode: set STRIPE_SECRET_KEY to create a real Checkout session for ${plan.name} ($${(plan.amount/100).toFixed(0)}/${plan.interval}).` });
@@ -533,7 +542,15 @@ app.post("/api/billing/checkout", async (req, res) => {
       "line_items[0][price_data][unit_amount]": String(plan.amount),
       "line_items[0][price_data][recurring][interval]": plan.interval,
       "line_items[0][price_data][product_data][name]": `Landroll Leader — ${plan.name}`,
+      "metadata[plan]": req.body.plan,
+      "subscription_data[metadata][plan]": req.body.plan,
+      allow_promotion_codes: "true",
     });
+    if (buyer) {
+      body.set("client_reference_id", buyer.id);
+      body.set("customer_email", buyer.email);
+      body.set("subscription_data[metadata][user_id]", buyer.id);
+    }
     const r = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/x-www-form-urlencoded" },
@@ -564,18 +581,27 @@ app.post("/api/billing/webhook", express.raw({ type: "application/json" }), (req
   } catch { return res.status(400).json({ error: "Bad payload" }); }
 
   if (event.type === "checkout.session.completed") {
-    const payerEmail = String(event.data.object?.customer_details?.email || "").toLowerCase();
-    const u = db.users.find((x) => x.email === payerEmail);
-    if (u) { u.billing_status = "active"; persist("users"); }
     const s = event.data.object;
-    db.subscribers.push({ email: s.customer_details?.email, stripe_customer: s.customer,
-      subscription: s.subscription, since: new Date().toISOString(), status: "active" });
+    const payerEmail = String(s?.customer_details?.email || s?.customer_email || "").toLowerCase();
+    const u = db.users.find((x) => x.id === s.client_reference_id) || db.users.find((x) => x.email === payerEmail);
+    const plan = s.metadata?.plan;
+    if (u) {
+      u.billing_status = "active";
+      if (TIERS.includes(plan)) u.tier = plan;
+      u.stripe_customer = s.customer; u.stripe_subscription = s.subscription;
+      persist("users");
+    }
+    db.subscribers.push({ email: s.customer_details?.email, user_id: u?.id || null, plan: plan || null,
+      stripe_customer: s.customer, subscription: s.subscription, since: new Date().toISOString(), status: "active" });
     persist("subscribers");
     audit("stripe", "subscription.created", { email: s.customer_details?.email });
   }
   if (event.type === "customer.subscription.deleted") {
     const sub = db.subscribers.find((x) => x.subscription === event.data.object.id);
     if (sub) { sub.status = "cancelled"; persist("subscribers"); }
+    const cu = db.users.find((x) => x.stripe_subscription === event.data.object.id
+      || (sub && (x.id === sub.user_id || x.email === String(sub.email || "").toLowerCase())));
+    if (cu) { cu.billing_status = "cancelled"; persist("users"); }
     audit("stripe", "subscription.cancelled", { subscription: event.data.object.id });
   }
   res.json({ received: true });
@@ -851,7 +877,7 @@ function checkProductionConfig() {
   if (IS_PROD && !process.env.SITE_URL) {
     problems.push("SITE_URL is not set — emailed links (password reset, alerts) may point at the wrong host.");
   }
-  if (IS_PROD && process.env.STRIPE_SECRET_KEY && !process.env.STRIPE_WEBHOOK_SECRET) {
+  if (IS_PROD && stripeKey() && !process.env.STRIPE_WEBHOOK_SECRET) {
     problems.push("STRIPE_SECRET_KEY is set without STRIPE_WEBHOOK_SECRET — webhook signature is unverified.");
   }
   if (problems.length) {
