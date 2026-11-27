@@ -378,9 +378,13 @@ app.get("/api/facets", (req, res) => {
    Billing — Stripe Checkout (live with STRIPE_SECRET_KEY, demo mode without)
    ========================================================= */
 const PLANS = {
-  investor: { name: "Investor", amount: 4900, interval: "month" },
-  pro:      { name: "Pro desk", amount: 19900, interval: "month" },
+  investor:        { tier: "investor", name: "Investor",                 amount: 4900,   interval: "month", trialDays: 7 },
+  investor_annual: { tier: "investor", name: "Investor (annual)",        amount: 49000,  interval: "year" },
+  pro:             { tier: "pro",      name: "Pro desk",                 amount: 19900,  interval: "month" },
+  pro_annual:      { tier: "pro",      name: "Pro desk (annual)",        amount: 199000, interval: "year" },
+  season_pass:     { tier: "pro",      name: "Sale Season Pass — 90 days of Pro", amount: 39900, oneTimeDays: 90 },
 };
+const passExpired = (u) => u.pass_expires && Date.now() > Date.parse(u.pass_expires);
 // Railway holds the live key as STRIPE_RESTRICTED_KEY; accept either name.
 const stripeKey = () => process.env.STRIPE_SECRET_KEY || process.env.STRIPE_RESTRICTED_KEY || "";
 // Paid tiers unlock only once billing is settled (or comped by an admin / demo mode with no Stripe).
@@ -417,7 +421,7 @@ function requireTier(min) {
     if (TIERS.indexOf(u.tier) < TIERS.indexOf(min)) {
       return res.status(403).json({ error: `This feature is on the ${min} plan.`, upgrade: min, current: u.tier });
     }
-    if (min !== "browse" && !PAID_OK.has(u.billing_status)) {
+    if (min !== "browse" && (!PAID_OK.has(u.billing_status) || passExpired(u))) {
       return res.status(402).json({ error: "Finish checkout to unlock this feature.", upgrade: u.tier, current: u.tier,
         billing_status: u.billing_status });
     }
@@ -518,7 +522,8 @@ app.post("/api/users/logout", (req, res) => {
 
 app.get("/api/users/me", (req, res) => {
   const u = userOf(req);
-  res.json(u ? { authenticated: true, email: u.email, name: u.name, tier: u.tier, billing_status: u.billing_status }
+  res.json(u ? { authenticated: true, email: u.email, name: u.name, tier: u.tier, plan: u.plan || u.tier,
+      billing_status: passExpired(u) ? "expired" : u.billing_status, pass_expires: u.pass_expires || null }
              : { authenticated: false });
 });
 
@@ -533,23 +538,27 @@ app.post("/api/billing/checkout", async (req, res) => {
   }
   try {
     const site = process.env.SITE_URL || `${req.protocol}://${req.get("host")}`;
+    const oneTime = !!plan.oneTimeDays;
     const body = new URLSearchParams({
-      mode: "subscription",
+      mode: oneTime ? "payment" : "subscription",
       success_url: `${site}/?checkout=success`,
       cancel_url: `${site}/?checkout=cancelled`,
       "line_items[0][quantity]": "1",
       "line_items[0][price_data][currency]": "usd",
       "line_items[0][price_data][unit_amount]": String(plan.amount),
-      "line_items[0][price_data][recurring][interval]": plan.interval,
       "line_items[0][price_data][product_data][name]": `Landroll Leader — ${plan.name}`,
       "metadata[plan]": req.body.plan,
-      "subscription_data[metadata][plan]": req.body.plan,
       allow_promotion_codes: "true",
     });
+    if (!oneTime) {
+      body.set("line_items[0][price_data][recurring][interval]", plan.interval);
+      body.set("subscription_data[metadata][plan]", req.body.plan);
+      if (plan.trialDays) body.set("subscription_data[trial_period_days]", String(plan.trialDays));
+    }
     if (buyer) {
       body.set("client_reference_id", buyer.id);
       body.set("customer_email", buyer.email);
-      body.set("subscription_data[metadata][user_id]", buyer.id);
+      if (!oneTime) body.set("subscription_data[metadata][user_id]", buyer.id);
     }
     const r = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
@@ -585,10 +594,19 @@ app.post("/api/billing/webhook", express.raw({ type: "application/json" }), (req
     const payerEmail = String(s?.customer_details?.email || s?.customer_email || "").toLowerCase();
     const u = db.users.find((x) => x.id === s.client_reference_id) || db.users.find((x) => x.email === payerEmail);
     const plan = s.metadata?.plan;
+    const P = PLANS[plan];
     if (u) {
       u.billing_status = "active";
-      if (TIERS.includes(plan)) u.tier = plan;
-      u.stripe_customer = s.customer; u.stripe_subscription = s.subscription;
+      if (P) u.tier = P.tier;
+      u.plan = plan || u.plan;
+      u.stripe_customer = s.customer;
+      if (P?.oneTimeDays) {
+        // Stack on any remaining pass time so renewing early never loses days.
+        const base = Math.max(Date.now(), u.pass_expires ? Date.parse(u.pass_expires) : 0);
+        u.pass_expires = new Date(base + P.oneTimeDays * 864e5).toISOString();
+      } else {
+        u.stripe_subscription = s.subscription; u.pass_expires = null;
+      }
       persist("users");
     }
     db.subscribers.push({ email: s.customer_details?.email, user_id: u?.id || null, plan: plan || null,

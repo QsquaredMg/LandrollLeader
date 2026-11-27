@@ -367,9 +367,15 @@ a{color:inherit;text-decoration:none}
           </div>
           <div class="plan">
             <h4>Pro desk</h4><div class="pp">$199<small>/mo</small></div>
-            <ul><li>Everything in Investor</li><li>Multi-county coverage</li><li>API access</li><li>5 team seats</li></ul>
+            <ul><li>Everything in Investor</li><li>Buyer intelligence — who bought what, and where</li><li>Every new county as it's added</li><li>Priority support</li></ul>
             <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="closePlans();openAccount('signup','pro')">Start Pro</button>
           </div>
+        </div>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin-top:12px;text-align:center"><b>Pay yearly, get 2 months free</b> — Investor $490/yr · Pro $1,990/yr</p>
+        <div style="margin-top:12px;border:1.5px dashed var(--amber);border-radius:12px;padding:14px 16px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+          <div><b style="font-size:15px">Sale Season Pass</b> <span class="tp" style="color:var(--amber-deep);font-weight:700">$399 one time</span>
+            <div style="font-size:12.5px;color:var(--ink-soft)">90 days of full Pro access for sale season. No subscription, nothing to cancel.</div></div>
+          <button class="btn btn-amber" onclick="closePlans();openAccount('signup','pro','season_pass')">Get the pass</button>
         </div>
         <p style="font-size:11.5px;color:var(--ink-faint);margin-top:16px">Landroll Leader supplements — and does not replace — statutory notice under Miss. Code Ann. § 27-41-55 et seq. County records remain authoritative. Nothing here is legal or investment advice.</p>
       </div>
@@ -515,7 +521,12 @@ a{color:inherit;text-decoration:none}
           <button type="button" class="tiercard" data-tier="investor" onclick="pickTier('investor')">
             <b>Investor</b><span class="tp">$49/mo</span><span class="td">CSV export, alerts, yield tools</span></button>
           <button type="button" class="tiercard" data-tier="pro" onclick="pickTier('pro')">
-            <b>Pro desk</b><span class="tp">$199/mo</span><span class="td">Buyer intel, API, multi-county</span></button>
+            <b>Pro desk</b><span class="tp">$199/mo</span><span class="td">Buyer intel, every county</span></button>
+        </div>
+        <div id="cycle-pick" style="display:none;margin-top:10px;font-size:12.5px;gap:14px;flex-wrap:wrap">
+          <label><input type="radio" name="cycle" value="monthly" checked onchange="pickCycle(this.value)"> Monthly</label>
+          <label><input type="radio" name="cycle" value="annual" onchange="pickCycle(this.value)"> Yearly — 2 months free</label>
+          <label id="cycle-season-l"><input type="radio" name="cycle" value="season" onchange="pickCycle(this.value)"> Season Pass — $399, 90 days</label>
         </div>
       </div>
       <div id="acct-err" style="display:none;color:var(--red);font-size:12.5px;margin:10px 0 0"></div>
@@ -726,9 +737,24 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDetail();close
 
 /* ================= investor accounts ================= */
 let acctModeName='signin', acctTier='investor', CUR_USER=null;
-function openAccount(mode, tier){
+let acctCycle='monthly';
+const PRICE={investor:{monthly:'$49/mo',annual:'$490/yr'},pro:{monthly:'$199/mo',annual:'$1,990/yr',season:'$399 · 90 days'}};
+function planKey(){
+  if(acctTier==='browse')return null;
+  if(acctCycle==='season'&&acctTier==='pro')return 'season_pass';
+  return acctTier+(acctCycle==='annual'?'_annual':'');
+}
+function pickCycle(c){
+  acctCycle=c;
+  if(c==='season'&&acctTier!=='pro')pickTier('pro');
+  document.querySelectorAll('input[name=cycle]').forEach(r=>r.checked=r.value===acctCycle);
+  ['investor','pro'].forEach(t=>{const el=document.querySelector(`.tiercard[data-tier=${t}] .tp`);
+    if(el)el.textContent=PRICE[t][acctCycle]||PRICE[t].monthly;});
+}
+function openAccount(mode, tier, plan){
   acctMode(mode||'signin');
   if(tier)pickTier(tier);
+  pickCycle(plan==='season_pass'?'season':(plan&&plan.endsWith('_annual'))?'annual':'monthly');
   $('account-ovl').classList.add('on');
   setTimeout(()=>$(acctModeName==='signup'?'su-name':'su-email').focus(),50);
 }
@@ -753,6 +779,8 @@ function acctMode(m){
 function pickTier(t){
   acctTier=t;
   document.querySelectorAll('.tiercard').forEach(c=>c.classList.toggle('sel',c.dataset.tier===t));
+  const cp=$('cycle-pick'); if(cp)cp.style.display=t==='browse'?'none':'flex';
+  if(t==='investor'&&acctCycle==='season'){acctCycle='monthly';pickCycle('monthly');}
 }
 async function acctSubmit(){
   $('acct-err').style.display='none';
@@ -769,8 +797,8 @@ async function acctSubmit(){
   if(acctModeName==='reset'){toast(d.message);resetToken=null;history.replaceState(null,'',location.pathname);acctMode('signin');$('su-pass').value='';return;}
   CUR_USER=d; renderNavAccount(); closeAccount(); $('su-pass').value='';
   if(acctModeName==='signup'&&d.tier!=='browse'){
-    toast(`Welcome, ${d.name} — setting up ${d.tier} billing…`);
-    await checkout(d.tier);
+    toast(`Welcome, ${d.name} — taking you to secure checkout…`);
+    await checkout(planKey()||d.tier);
   } else {
     toast(`Welcome${d.name?', '+d.name:''}!`);
   }
@@ -792,7 +820,7 @@ async function csvExport(){
   const r=await fetch(`${API}/api/export/listings.csv?${qs}`);
   if(r.status===401){toast('Sign in to export');openAccount('signup','investor');return;}
   if(r.status===403){toast('CSV export is on the Investor plan');openAccount('signup','investor');return;}
-  if(r.status===402){toast('Finish checkout to unlock export…');await checkout(CUR_USER&&CUR_USER.tier||'investor');return;}
+  if(r.status===402){toast('Finish checkout to unlock export…');await checkout(CUR_USER&&(CUR_USER.plan||CUR_USER.tier)||'investor');return;}
   const blob=await r.blob();const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);a.download='landroll_listings.csv';a.click();
 }
